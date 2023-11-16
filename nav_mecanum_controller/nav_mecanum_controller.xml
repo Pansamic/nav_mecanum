@@ -1,0 +1,8 @@
+<library path="nav_mecanum_controller">
+  <class name="nav_mecanum_controller/NavMecanumController"
+         type="nav_mecanum_controller::NavMecanumController" base_class_type="controller_interface::ControllerInterface">
+  <description>
+    NavMecanumController ros2_control controller.
+  </description>
+  </class>
+</library>
