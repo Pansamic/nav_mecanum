@@ -23,44 +23,37 @@ class TestTimeProcessor : public rclcpp::Node
             auto qos = rclcpp::QoS(rclcpp::QoSInitialization(qos_profile.history, 10), qos_profile);
             
             odometry_subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-                "wheel/odometry", qos, std::bind(&TestTimeProcessor::odometry_callback, this, _1)
-            );
-
-            imu_subscription_ = this->create_subscription<sensor_msgs::msg::Imu>(
-                "imu/data", qos, std::bind(&TestTimeProcessor::imu_callback, this, _1)
-            );
+                "wheel/odometry", qos, std::bind(&TestTimeProcessor::odometry_callback, this, _1));
 
             timeref_publisher_ = this->create_publisher<sensor_msgs::msg::TimeReference>("time_reference",10);
             publish_timer_ = this->create_wall_timer(
-                1s, std::bind(&TestTimeProcessor::timer_callback(), this)
-            );
+                2s, std::bind(&TestTimeProcessor::timer_callback, this));
 
             RCLCPP_INFO(this->get_logger(), "Start listen to /wheel/odometry and /imu/data.\n");
         }
     private:
         rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr odometry_subscription_;
-        rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
+        // rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr imu_subscription_;
         rclcpp::Publisher<sensor_msgs::msg::TimeReference>::SharedPtr timeref_publisher_;
-
+        rclcpp::TimerBase::SharedPtr publish_timer_;
         void odometry_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
         {
+            rclcpp::Time current_time = this->get_clock()->now();
+            double msg_time = (double)msg->header.stamp.sec + (double)msg->header.stamp.nanosec/1000000000.0;
             RCLCPP_INFO(this->get_logger(),
-            "[Odometry] Receive Time:%ld | Current Time:%ld",
+            "[Odom] Receive Time:%-10ld.%-10ld | Current Time:%-10.6lf",
             msg->header.stamp.sec,
-            std::chrono::system_clock::now());                
-        }
-        void imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
-        {
-            RCLCPP_INFO(this->get_logger(),
-            "[IMU] Receive Time:%ld | Current Time:%ld",
-            msg->header.stamp.sec,
-            std::chrono::system_clock::now());
+            msg->header.stamp.nanosec,
+            current_time.seconds());
         }
         void timer_callback()
         {
             auto time_ref_message = sensor_msgs::msg::TimeReference();
         
-            time_ref_message.header.stamp = rclcpp::Time::Time();
+            // time_ref_message.header.stamp = rclcpp::Clock(RCL_ROS_TIME).now();
+            time_ref_message.header.stamp = this->get_clock()->now();
+            time_ref_message.time_ref = this->get_clock()->now();
+            timeref_publisher_->publish(time_ref_message);
         }
 };
 
