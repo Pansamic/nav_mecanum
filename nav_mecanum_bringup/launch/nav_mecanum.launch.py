@@ -17,9 +17,10 @@
 #
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, RegisterEventHandler, TimerAction
 from launch.event_handlers import OnProcessExit, OnProcessStart
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -89,6 +90,20 @@ def generate_launch_description():
             description="Robot controller to start.",
         )
     )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "sllidar_package",
+            default_value="sllidar_ros2",
+            description="slamtec rplidar ros2 sdk package."
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "sllidar_launch_file",
+            default_value="sllidar_a1_launch.py",
+            description="slamtec rplidar type."
+        )
+    )
 
     # Initialize Arguments
     runtime_config_package = LaunchConfiguration("runtime_config_package")
@@ -99,7 +114,8 @@ def generate_launch_description():
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     robot_controller = LaunchConfiguration("robot_controller")
-
+    sllidar_package = LaunchConfiguration("sllidar_package")
+    sllidar_launch_file = LaunchConfiguration("sllidar_launch_file")
     # Get URDF via xacro
     robot_description_content = Command(
         [
@@ -120,7 +136,13 @@ def generate_launch_description():
             " ",
         ]
     )
-
+    ekf_config_path = PathJoinSubstitution(
+        [
+            FindPackageShare("nav_mecanum_bringup"),
+            "config",
+            "ekf.yaml"
+        ]
+    )
     robot_description = {"robot_description": robot_description_content}
 
     robot_controllers = PathJoinSubstitution(
@@ -130,6 +152,30 @@ def generate_launch_description():
         [FindPackageShare(description_package), "rviz", "nav_mecanum.rviz"]
     )
 
+    sllidar_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare(sllidar_package), "launch", sllidar_launch_file]
+            )
+        )
+    )
+
+    kernel_node = Node(
+        package="nav_mecanum_bringup",
+        executable="nav_mecanum_kernel",
+        output="both"
+    )
+
+    localization_node = Node(
+            package='robot_localization',
+            executable='ekf_node',
+            name='ekf_filter_node',
+            output='screen',
+            parameters=[
+                ekf_config_path
+            ],
+            remappings=[("odometry/filtered", "odom/filtered")]
+        )
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -197,11 +243,14 @@ def generate_launch_description():
     return LaunchDescription(
         declared_arguments
         + [
-            control_node,
+            # control_node,
+            kernel_node,
             robot_state_pub_node,
-            rviz_node,
-            joint_state_broadcaster_spawner,
-            delay_joint_state_broadcaster_spawner_after_ros2_control_node,
+            # rviz_node,
+            sllidar_launch,
+            localization_node
+            # joint_state_broadcaster_spawner,
+            # delay_joint_state_broadcaster_spawner_after_ros2_control_node,
         ]
         # + delay_robot_controller_spawners_after_joint_state_broadcaster_spawner
     )

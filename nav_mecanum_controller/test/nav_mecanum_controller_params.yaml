@@ -1,7 +1,0 @@
-test_nav_mecanum_controller:
-  ros__parameters:
-
-    joints:
-      - joint1
-
-    interface_name: acceleration

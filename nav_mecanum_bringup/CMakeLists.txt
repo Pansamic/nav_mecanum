@@ -9,32 +9,25 @@ endif()
 find_package(ament_cmake REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(control_msgs REQUIRED)
+
+add_executable(nav_mecanum_kernel src/nav_mecanum_kernel.cpp)
+
+ament_target_dependencies(nav_mecanum_kernel rclcpp sensor_msgs nav_msgs control_msgs)
+
+install(TARGETS
+  nav_mecanum_kernel
+  DESTINATION lib/${PROJECT_NAME}
+  )
 
 install(
   DIRECTORY config launch
   DESTINATION share/${PROJECT_NAME}
 )
 
-install(
-  DIRECTORY config launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY config launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY config launch
-  DESTINATION share/${PROJECT_NAME}
-)
-
-install(
-  DIRECTORY config launch
-  DESTINATION share/${PROJECT_NAME}
-)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
