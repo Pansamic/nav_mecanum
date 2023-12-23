@@ -13,13 +13,19 @@ find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(control_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2 REQUIRED)
 
 add_executable(nav_mecanum_kernel src/nav_mecanum_kernel.cpp)
+add_executable(imu_checker src/imu_checker.cpp)
 
 ament_target_dependencies(nav_mecanum_kernel rclcpp sensor_msgs nav_msgs control_msgs)
+ament_target_dependencies(imu_checker rclcpp sensor_msgs tf2_msgs geometry_msgs tf2_ros)
 
 install(TARGETS
   nav_mecanum_kernel
+  imu_checker
   DESTINATION lib/${PROJECT_NAME}
   )
 
