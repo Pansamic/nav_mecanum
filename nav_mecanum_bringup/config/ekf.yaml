@@ -20,16 +20,21 @@ ekf_filter_node:
         #vx    , vy    , vz,
         #vroll , vpitch, vyaw,
         #ax    , ay    , az
-        odom0: odom/unfiltered
+        odom0: odom/wheel
         odom0_config: [false, false, false,
                        false, false, false,
                        true, true, false,
                        false, false, true,
                        false, false, false]
-
+        odom1: odom/laser
+        odom1_config: [false, false, false,
+                       false, false, false,
+                       true, true, false,
+                       false, false, true,
+                       false, false, false]
         imu0: imu/data
         imu0_config: [false, false, false,
                       false, false, false,
                       false, false, false,
                       false, false, true,
-                      false, false, false]
+                      true, true, false]
