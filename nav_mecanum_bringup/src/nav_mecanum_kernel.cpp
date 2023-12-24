@@ -29,8 +29,23 @@ class NavMecanumKernel : public rclcpp::Node
 {
     public:
         NavMecanumKernel()
-        : Node("nav_mecanum_kernel")
+        : Node("nav_mecanum_kernel", rclcpp::NodeOptions())
         {
+            declare_parameter("car_wheel_distance_x", 0.223);
+            declare_parameter("car_wheel_distance_y", 0.193);
+            declare_parameter("car_wheel_radius", 0.0375);
+            if(get_parameter("car_wheel_distance_x", car_wheel_distance_x_))
+            {
+                RCLCPP_INFO(this->get_logger(), "got parameter 'car_wheel_distance_x': %lf.", car_wheel_distance_x_);
+            }
+            if(get_parameter("car_wheel_distance_y", car_wheel_distance_y_))
+            {
+                RCLCPP_INFO(this->get_logger(), "got parameter 'car_wheel_distance_y': %lf.", car_wheel_distance_y_);
+            }
+            if(get_parameter("car_wheel_radius", car_wheel_radius_))
+            {
+                RCLCPP_INFO(this->get_logger(), "got parameter 'car_wheel_radius': %lf.", car_wheel_radius_);
+            }
             /************************************/
             /*            publisher             */
             /************************************/
@@ -79,17 +94,10 @@ class NavMecanumKernel : public rclcpp::Node
         double heading_;
         double x_pos_;
         double y_pos_;
-        const double car_x_wheel_dis = 0.223;
-        const double car_y_wheel_dis = 0.193;
-        const double car_wheel_radius = 0.0375;
+        double car_wheel_distance_x_;
+        double car_wheel_distance_y_;
+        double car_wheel_radius_;
 
-        // void timeref_timer_callback()
-        // {
-        //     auto time_ref_message = sensor_msgs::msg::TimeReference();
-        //     time_ref_message.header.stamp = this->get_clock()->now();
-        //     time_ref_message.time_ref = this->get_clock()->now();
-        //     timeref_publisher_->publish(time_ref_message);
-        // }
         void laser_joint_state_timer_callback()
         {
             auto joint_state = sensor_msgs::msg::JointState();
@@ -135,10 +143,10 @@ class NavMecanumKernel : public rclcpp::Node
             double vel_x = msg->linear.x;   // unit: m/s
             double vel_y = msg->linear.y;   // unit: m/s
             double vel_ang = msg->angular.z; // unit: rad/s
-            double left_front_wheel_vel = (vel_x - vel_y - vel_ang * (car_x_wheel_dis + car_y_wheel_dis))/car_wheel_radius;
-            double left_rear_wheel_vel = (vel_x + vel_y - vel_ang * (car_x_wheel_dis + car_y_wheel_dis))/car_wheel_radius;
-            double right_front_wheel_vel = (vel_x + vel_y + vel_ang * (car_x_wheel_dis + car_y_wheel_dis))/car_wheel_radius;
-            double right_rear_wheel_vel = (vel_x - vel_y + vel_ang * (car_x_wheel_dis + car_y_wheel_dis))/car_wheel_radius;
+            double left_front_wheel_vel = (vel_x - vel_y - vel_ang * (car_wheel_distance_x_ + car_wheel_distance_y_))/car_wheel_radius_;
+            double left_rear_wheel_vel = (vel_x + vel_y - vel_ang * (car_wheel_distance_x_ + car_wheel_distance_y_))/car_wheel_radius_;
+            double right_front_wheel_vel = (vel_x + vel_y + vel_ang * (car_wheel_distance_x_ + car_wheel_distance_y_))/car_wheel_radius_;
+            double right_rear_wheel_vel = (vel_x - vel_y + vel_ang * (car_wheel_distance_x_ + car_wheel_distance_y_))/car_wheel_radius_;
 
             joint_jog_msg.header.stamp = this->get_clock()->now();
             joint_jog_msg.header.frame_id = "";
@@ -177,7 +185,7 @@ class NavMecanumKernel : public rclcpp::Node
 
         //     double car_x_vel = (left_front_wheel_vel + right_rear_wheel_vel + left_rear_wheel_vel + right_front_wheel_vel)/4.0;
         //     double car_y_vel = (left_front_wheel_vel + right_rear_wheel_vel - left_rear_wheel_vel - right_front_wheel_vel)/4.0;
-        //     double car_ang_vel = (right_front_wheel_vel + right_rear_wheel_vel - left_front_wheel_vel - left_rear_wheel_vel)/(4.0*(car_x_wheel_dis+car_y_wheel_dis));
+        //     double car_ang_vel = (right_front_wheel_vel + right_rear_wheel_vel - left_front_wheel_vel - left_rear_wheel_vel)/(4.0*(car_wheel_distance_x+car_wheel_distance_y));
 
         //     double delta_heading = car_ang_vel * time_interval; //radians
         //     double cos_h = cos(heading_);

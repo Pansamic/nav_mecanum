@@ -1,0 +1,9 @@
+nav_mecanum_kernel: 
+  ros__parameters:
+    # front and rear wheel distance from their central point.
+    car_wheel_distance_x: 0.223
+    # left and right wheel distance from their central point.
+    car_wheel_distance_y: 0.193
+    # wheel radius. unit:meter
+    car_wheel_radius: 0.0375
+    
