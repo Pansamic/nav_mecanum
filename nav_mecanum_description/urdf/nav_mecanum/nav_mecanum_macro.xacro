@@ -9,7 +9,6 @@
     <link name="${prefix}base_link">
       <!-- Default inertial for Gazebo/Ingnition - copy and edit block from 'common.xacro'
            to get more realistic behaviour-->
-      <xacro:default_inertial/>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
